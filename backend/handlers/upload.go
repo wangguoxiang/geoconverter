@@ -1,44 +1,63 @@
 package handlers
 
 import (
-    "fmt"
-    "io"
-    "net/http"
-    "os"
-    "github.com/gin-gonic/gin"
-    "github.com/wangguoxiang/geocoverner/backend/services"
+	"io"
+	"net/http"
+	"os"
+
+	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func UploadFile(c *gin.Context) {
-    file, header, err := c.Request.FormFile("file")
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "File upload failed", "error": err.Error()})
-        return
-    }
-    defer file.Close()
+	// 设置文件上传大小限制
+	maxSize := 100 << 20 // 8 MiB
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxSize))
 
-    // 创建一个临时文件来保存上传的文件
-    tempFile, err := os.CreateTemp("", "upload-*.csv")
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to create temporary file", "error": err.Error()})
-        return
-    }
-    defer tempFile.Close()
+	// 创建一个管道来读取上传的文件
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			log.Printf("Error retrieving form file: no file provided")
+			c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Error retrieving form file: no file provided", "error": "no file provided"})
+		} else {
+			log.Printf("Error retrieving form file: %v", err)
+			if err.Error() == "http: request body too large" {
+				log.Printf("Error retrieving form file: file too large")
+				c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Error retrieving form file: file too large", "error": "file size exceeds the limit of 100 MiB"})
+			} else {
+				c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Error", "error": err.Error()})
+			}
+		}
+		return
+	}
+	defer file.Close()
 
-    // 将上传的文件内容复制到临时文件
-    _, err = io.Copy(tempFile, file)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to save file", "error": err.Error()})
-        return
-    }
+	// 创建一个临时文件来保存上传的文件
+	tempFile, err := os.CreateTemp("./converted/", "uploaded-*.csv")
+	if err != nil {
+		log.Printf("Error creating temp file: %v", err)
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Error creating temp file", "error": err.Error()})
+		return
+	}
+	defer tempFile.Close()
 
-    // 调用服务层进行经纬度转换
-    convertedFilePath, err := services.ConvertCSV(tempFile.Name(), header.Filename)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to convert CSV", "error": err.Error()})
-        return
-    }
+	// 使用 io.Copy 简化文件读取和写入操作
+	_, err = io.Copy(tempFile, file)
+	if err != nil {
+		log.Printf("Error copying file to temp file: %v", err)
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Error copying file to temp file", "error": err.Error()})
+		return
+	}
 
-    // 返回文件ID（这里简化为文件名）
-    c.JSON(http.StatusOK, gin.H{"status": "success", "message": "File uploaded successfully", "fileId": header.Filename})
+	// 关闭临时文件
+	if err := tempFile.Close(); err != nil {
+		log.Printf("Error closing temp file: %v", err)
+		c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Error closing temp file", "error": err.Error()})
+		return
+	}
+
+	// 返回临时文件名
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "success", "filename": tempFile.Name()})
 }

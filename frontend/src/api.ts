@@ -1,17 +1,18 @@
-import axios from 'axios';
+import axios, { AxiosProgressEvent } from 'axios';
 
 const apiClient = axios.create({
-     // 确认后端的 IP 和端口为 192.168.3.100:8080
-    baseURL: 'http://192.168.3.100:8080/api',
-    timeout: 10000,
+    // 使用相对路径，避免跨域问题
+    baseURL:  '/api',
 });
 
 // 添加请求拦截器
 apiClient.interceptors.request.use(
     (config) => {
-         // 在发送请求之前做些什么，例如设置token
+        // 在发送请求之前做些什么，例如设置token
         config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
+        // 确保 baseURL 和 url 正确拼接
         config.url = `${config.url}`;
+        console.log(config);
         return config;
     },
     (error) => {
@@ -42,20 +43,26 @@ apiClient.interceptors.response.use(
     }
 );
 
-
-
-export const uploadFile = async (file: File) => {
+export const uploadFile = async (file: File, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) => {
     const formData = new FormData();
     formData.append('file', file);
     return apiClient.post('/upload', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: onUploadProgress,
     });
 };
 
 export const downloadFile = async (fileId: string) => {
-    return apiClient.get(`/download/${fileId}`, {
+    return apiClient.get('/download', {
+        params: { fileId }, // 将 fileId 作为参数传递
         responseType: 'blob',
+    });
+};
+
+export const convertFile = async (fileId: string) => {
+    return apiClient.get('/convert', { // 修改: 将 post 改为 get
+        params: { fileId }, // 将 fileId 作为参数传递
     });
 };

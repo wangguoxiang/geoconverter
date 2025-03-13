@@ -10,13 +10,18 @@ jest.mock('../api', () => ({
 
 describe('FileUpload Component', () => {
     const setFileIdMock = jest.fn();
+    // 在所有测试用例的render调用中添加onConversionReady属性
+    const mockOnConversionReady = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     test('renders upload button', () => {
-        render(<FileUpload setFileId={setFileIdMock} />);
+        render(<FileUpload 
+            setFileId={setFileIdMock} 
+            onConversionReady={mockOnConversionReady} 
+            />);
         expect(screen.getByText(/Upload CSV/i)).toBeInTheDocument();
     });
 
@@ -24,7 +29,7 @@ describe('FileUpload Component', () => {
         const mockFile = new File(['hello'], 'hello.csv', { type: 'text/csv' });
         (uploadFile as jest.Mock).mockResolvedValue({ data: { fileId: '123' } });
 
-        render(<FileUpload setFileId={setFileIdMock} />);
+        render(<FileUpload setFileId={setFileIdMock} onConversionReady={mockOnConversionReady} />);
         const input = screen.getByLabelText(/upload csv/i);
         fireEvent.change(input, { target: { files: [mockFile] } });
 
@@ -37,7 +42,7 @@ describe('FileUpload Component', () => {
         const mockFile = new File(['hello'], 'hello.csv', { type: 'text/csv' });
         (uploadFile as jest.Mock).mockRejectedValue(new Error('Upload failed'));
 
-        render(<FileUpload setFileId={setFileIdMock} />);
+        render(<FileUpload setFileId={setFileIdMock} onConversionReady={mockOnConversionReady} />);
         const input = screen.getByLabelText(/upload csv/i);
         fireEvent.change(input, { target: { files: [mockFile] } });
 
