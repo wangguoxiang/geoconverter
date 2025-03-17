@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/yanmengfei/coord"
 )
@@ -106,7 +106,7 @@ func ConvertCSV(inputPath, fileName string) (string, error) {
 	// 刷新写入器
 	writer.Flush()
 
-	return strings.Replace(tempFile.Name(), "./converted/", "", 1), nil
+	return filepath.Base(tempFile.Name()), nil
 }
 
 func GetConvertedFilePath(fileId string) (string, error) {
@@ -154,7 +154,7 @@ func reverseGeocode(Lat, Lng float64) (string, error) {
 	// 修改后的响应解析部分
 	var results []requestMsg // 值类型声明
 	if err := json.NewDecoder(response.Body).Decode(&results); err != nil {
-		return "", fmt.Errorf("failed to decode response1: %v", err)
+		return "", fmt.Errorf("failed to decode response: %v", err)
 	}
 
 	if len(results) == 0 {

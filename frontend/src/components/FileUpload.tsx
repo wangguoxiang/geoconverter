@@ -19,7 +19,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ setFileId, onConversionReady })
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 setUploadProgress(percentCompleted);
                 onProgress({ percent: percentCompleted });
-            }).then((data) => {console.log(data); return data});
+            });
+            console.log(response.data.fileId);
             setFileId(response.data.fileId);
             onSuccess(response.data, file);
             message.success(`${file.name} file uploaded successfully`);

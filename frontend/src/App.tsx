@@ -14,8 +14,15 @@ const App: React.FC = () => {
     };
 
     const handleConvert = async () => {
+        if (!fileId) {
+            message.error('File ID is missing. Please upload a file first.');
+            return;
+        }
         try {
-            await convertFile(fileId);
+            console.log(fileId);
+            const conversionResult = await convertFile(fileId); // 增加返回值处理
+            console.log('Conversion Result:', conversionResult.data); // 打印返回值
+            setFileId(conversionResult.data.fileId);
             message.success('Conversion completed successfully');
             setConversionReady(false); // 转换完成后重置状态
         } catch (error) {
@@ -30,7 +37,7 @@ const App: React.FC = () => {
             </Layout.Header>
             <Layout.Content style={{ padding: '24px' }}>
                 <FileUpload setFileId={setFileId} onConversionReady={handleConversionReady} />
-                {conversionReady && (
+                {conversionReady && fileId && ( // 添加 fileId 检查
                     <Button type="primary" onClick={handleConvert} style={{ marginTop: '16px' }}>
                         Convert to Location
                     </Button>

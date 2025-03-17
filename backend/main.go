@@ -20,10 +20,10 @@ func main() {
 	r.POST("/api/upload", handlers.UploadFile)
 
 	// 文件转换路由
-	r.GET("/api/convert:fileId", handlers.ConvertCSVFile) // 修改为GET方法
+	r.GET("/api/convert", handlers.ConvertCSVFile) // 修改为GET方法
 
 	// 文件下载路由
-	r.GET("/api/download:fileId", handlers.DownloadFile)
+	r.GET("/api/download", handlers.DownloadFile)
 
 	// 启动服务器
 	r.Run(":8080")

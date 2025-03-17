@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
-	"os" // 导入os包
-	"path/filepath"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wangguoxiang/geoconverter/backend/services"
@@ -24,6 +24,9 @@ func ConvertCSVFile(c *gin.Context) {
 		return
 	}
 
+	// 打印路径进行调试
+	log.Printf("Converted file path: %s", convertedFilePath)
+
 	// Ensure the file exists in the converted directory
 	if _, err := os.Stat(convertedFilePath); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
@@ -31,11 +34,19 @@ func ConvertCSVFile(c *gin.Context) {
 	}
 
 	// Convert the CSV file
-	convertedFileName, err := services.ConvertCSV(filepath.Dir(convertedFilePath), fileName)
+	convertedFileName, err := services.ConvertCSV(convertedFilePath, fileName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "CSV file converted successfully", "converted_file": convertedFileName})
+	// 删除 fileName 文件
+	err = os.Remove(convertedFilePath)
+	if err != nil {
+		log.Printf("Error removing file: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove file"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "CSV file converted successfully", "fileId": convertedFileName})
 }

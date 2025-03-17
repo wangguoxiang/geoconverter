@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"log"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
 
 func UploadFile(c *gin.Context) {
 	// 设置文件上传大小限制
-	maxSize := 100 << 20 // 8 MiB
+	maxSize := 200 << 20 // 8 MiB
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, int64(maxSize))
 
 	// 创建一个管道来读取上传的文件
@@ -59,5 +60,5 @@ func UploadFile(c *gin.Context) {
 	}
 
 	// 返回临时文件名
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "success", "filename": tempFile.Name()})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "success", "fileId": filepath.Base(tempFile.Name())})
 }

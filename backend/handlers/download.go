@@ -46,4 +46,5 @@ func DownloadFile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to send file", "error": err.Error()})
 		return
 	}
+
 }
