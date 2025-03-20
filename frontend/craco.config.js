@@ -9,6 +9,8 @@ module.exports = {
           '@': path.resolve(__dirname, 'src'),
         },
       };
+      // 修改输出目录
+      webpackConfig.output.path = path.resolve(__dirname, './dist');
       return webpackConfig;
     },
   },
