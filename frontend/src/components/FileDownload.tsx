@@ -5,9 +5,10 @@ import { downloadFile } from '../api';
 
 interface FileDownloadProps {
     fileId: string;
+    disabled: boolean; // 新增 disabled 属性
 }
 
-const FileDownload: React.FC<FileDownloadProps> = ({ fileId }) => {
+const FileDownload: React.FC<FileDownloadProps> = ({ fileId, disabled }) => {
     const handleDownload = async () => {
         try {
             const response = await downloadFile(fileId);
@@ -24,7 +25,7 @@ const FileDownload: React.FC<FileDownloadProps> = ({ fileId }) => {
     };
 
     return (
-        <Button icon={<DownloadOutlined />} onClick={handleDownload} disabled={!fileId}>
+        <Button icon={<DownloadOutlined />} onClick={handleDownload} disabled={disabled}>
             Download CSV
         </Button>
     );

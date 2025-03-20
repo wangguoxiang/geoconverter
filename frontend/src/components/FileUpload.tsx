@@ -25,9 +25,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ setFileId, onConversionReady })
             onSuccess(response.data, file);
             message.success(`${file.name} file uploaded successfully`);
             onConversionReady(); // 上传完成后调用回调函数
+            // 更新文件列表，只保留最新的文件
+            setFileList([file]);
         } catch (error) {
             onError(error);
-            message.error(`${file.name} file upload failed.`);
+            message.error(`File upload failed: ${error}`);
         }
     };
 

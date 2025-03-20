@@ -8,6 +8,8 @@ import './styles.css'; // 引入样式文件
 const App: React.FC = () => {
     const [fileId, setFileId] = useState<string>('');
     const [conversionReady, setConversionReady] = useState<boolean>(false); // 新增状态管理
+    const [isConverting, setIsConverting] = useState<boolean>(false); // 新增状态管理
+    const [isDownloadEnabled, setIsDownloadEnabled] = useState<boolean>(false); // 新增状态管理
 
     const handleConversionReady = () => {
         setConversionReady(true);
@@ -18,6 +20,7 @@ const App: React.FC = () => {
             message.error('File ID is missing. Please upload a file first.');
             return;
         }
+        setIsConverting(true); // 设置转换状态为 true
         try {
             console.log(fileId);
             const conversionResult = await convertFile(fileId); // 增加返回值处理
@@ -25,8 +28,11 @@ const App: React.FC = () => {
             setFileId(conversionResult.data.fileId);
             message.success('Conversion completed successfully');
             setConversionReady(false); // 转换完成后重置状态
+            setIsDownloadEnabled(true); // 启用下载按钮
         } catch (error) {
             message.error('Conversion failed.');
+        } finally {
+            setIsConverting(false); // 设置转换状态为 false
         }
     };
 
@@ -38,11 +44,20 @@ const App: React.FC = () => {
             <Layout.Content style={{ padding: '24px' }}>
                 <FileUpload setFileId={setFileId} onConversionReady={handleConversionReady} />
                 {conversionReady && fileId && ( // 添加 fileId 检查
-                    <Button type="primary" onClick={handleConvert} style={{ marginTop: '16px' }}>
-                        Convert to Location
-                    </Button>
+                    <>
+                        <Button
+                            type="primary"
+                            onClick={handleConvert}
+                            style={{ marginTop: '16px' }}
+                            disabled={isConverting} // 根据转换状态禁用按钮
+                        >
+                            {isConverting ? 'Converting...' : 'Convert to Location'} 
+                        </Button>
+                    </>
                 )}
-                <FileDownload fileId={fileId} />
+                <div style={{ marginTop: '16px' }}> 
+                    <FileDownload fileId={fileId} disabled={!isDownloadEnabled || !fileId} />
+                </div>
             </Layout.Content>
         </Layout>
     );
